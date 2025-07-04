@@ -1,26 +1,12 @@
 <script lang="ts">
-	import '../app.css';
+	import '../app.css'
+	import '$lib/styles/base.css'
+	// import '$lib/styles/tokens.css'
+	// import '$lib/styles/colors.css'
+	import '$lib/styles/button.css'
+	// import '$lib/styles/index.css'
 
-	let { children, data } = $props<{
-        children: any;
-        data: {
-            session: any;
-            userData: {
-                email: string | undefined;
-                id: string | undefined;
-                lastSignIn: string | undefined;
-                created: string | undefined;
-            }
-        }
-    }>();
-
-    $effect(() => {
-        console.log('Current user data:', {
-            session: data.session,
-            userData: data.userData
-        });
-    });
-
+	const props = $props()
 </script>
 
-{@render children()}
+{@render props.children()}
