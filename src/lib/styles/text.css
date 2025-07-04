@@ -1,0 +1,8 @@
+@reference './utilities.css'
+
+:root {
+	--font-sans: 'Outfit', 'Inclusive Sans', 'Geist', 'Inter', 'sans-serif';
+	--font-mono: 'Sono', 'Geist Mono', 'monospace';
+	--font-alt: 'Inclusive Sans', 'sans-serif';
+	--font-display: 'Outfit', 'sans-serif';
+}

@@ -1,12 +1,12 @@
 <script>
-	import { patternStore } from "../stores/pattern.svelte";
-	const tones = Object.values(patternStore.state.tones);
+	import PatternEditor from '$lib/components/pattern-editor.svelte'
 </script>
 
-<div class="PATTERN_EDITOR column w-full">
-	<div class="head">
-		<div class="octaveControl"></div>
-		<div class="timingLabels"></div>
-	</div>
-	<div class="body"></div>
+<div class="p-12 w-full h-full row xCenter yCenter">
+	<PatternEditor />
 </div>
+
+<style lang="postcss">
+	@reference 'tailwindcss';
+	@reference '../lib/styles/utilities.css';
+</style>

@@ -1,5 +1,5 @@
-@import 'tailwindcss';
-@import '$lib/styles/base.css';
+@reference 'tailwindcss';
+@reference '$lib/styles/utilities.css';
 
 @layer base {
 	button {
