@@ -1,0 +1,9 @@
+@reference 'tailwindcss';
+@reference './utilities.css';
+@reference './tokens.css';
+
+body {
+	height: 100vh;
+	max-height: 100vh;
+	background: linear-gradient(22.5deg, var(--color-silver-400), var(--color-silver-100));
+}

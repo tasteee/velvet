@@ -3,10 +3,15 @@
 	import SignalGrid from '$lib/components/signal-grid.svelte'
 	import { patternStore } from '../stores/pattern.svelte'
 	import OctaveControl from './octave-control.svelte'
+	import Toolbar from './toolbar.svelte'
+	import { PATTERN_GRID } from '$lib/constants/general'
 	const columnIndexes = $derived(range(128))
 </script>
 
-<div class="p-12 w-full h-full row xCenter yCenter">
+<div
+	class="patternEditorContainer p-12 w-full row xCenter yCenter"
+	style:--beatWidth={PATTERN_GRID.BEAT_WIDTH + 'px'}
+>
 	<div class="patternEditor row">
 		<div class="leftSide column w-[64px]">
 			<OctaveControl />
@@ -21,7 +26,7 @@
 			</div>
 		</div>
 
-		<div class="rightSide column w-full">
+		<div id="rightSide" class="column w-full">
 			<div class="timingLabels">
 				{#each columnIndexes as index}
 					<div class="timingLabelBox">
@@ -34,6 +39,8 @@
 			<SignalGrid />
 		</div>
 	</div>
+
+	<Toolbar />
 </div>
 
 <style lang="postcss">
@@ -45,6 +52,7 @@
 			@apply w-full row monoFont;
 			@apply border border-black rounded-sm shadow-sm;
 			@apply bg-gray-100;
+			height: 288px;
 		}
 
 		.patternEditor .leftSide {
@@ -52,7 +60,7 @@
 			@apply h-full;
 		}
 
-		.rightSide {
+		#rightSide {
 			@apply h-full;
 			@apply overflow-scroll;
 			overflow-y: hidden;
@@ -72,7 +80,8 @@
 		.timingLabelBox {
 			@apply h-full;
 			@apply row aCenter jCenter;
-			@apply w-[32px] min-w-[32px];
+			width: var(--beatWidth);
+			min-width: var(--beatWidth);
 			@apply border-r border-black;
 		}
 

@@ -1,3 +1,10 @@
+const TONE_IDS_0 = ['T1-2', 'T2-2', 'T3-2', 'T4-2', 'T5-2', 'T6-2', 'T7-2', 'T8-2']
+const TONE_IDS_1 = ['T1-1', 'T2-1', 'T3-1', 'T4-1', 'T5-1', 'T6-1', 'T7-1', 'T8-1']
+const TONE_IDS_2 = ['T1-0', 'T2-0', 'T3-0', 'T4-0', 'T5-0', 'T6-0', 'T7-0', 'T8-0']
+const TONE_IDS_3 = ['T1+1', 'T2+1', 'T3+1', 'T4+1', 'T5+1', 'T6+1', 'T7+1', 'T8+1']
+const TONE_IDS_4 = ['T1+2', 'T2+2', 'T3+2', 'T4+2', 'T5+2', 'T6+2', 'T7+2', 'T8+2']
+export const TONE_IDS = [TONE_IDS_0, TONE_IDS_1, TONE_IDS_2, TONE_IDS_3, TONE_IDS_4].flat()
+
 export const TONE_ROWS = {
 	T1: {
 		id: 'T1',

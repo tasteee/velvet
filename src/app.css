@@ -1,8 +1,9 @@
-@import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
-
 @import 'tailwindcss';
 @plugin "tailwindcss-animate";
+
+@import './lib/styles/utilities.css';
+@import './lib/styles/tokens.css';
+@import './lib/styles/index.css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -298,4 +299,47 @@
 	.link {
 		@apply hover:text-foreground/80 focus-visible:ring-foreground focus-visible:ring-offset-background rounded-xs focus-visible:outline-hidden inline-flex items-center gap-1 font-medium underline underline-offset-4 focus-visible:ring-2 focus-visible:ring-offset-2;
 	}
+}
+
+@layer base {
+  button,
+  input,
+  select,
+  textarea {
+    height: 2rem; /* 32px */
+    padding: 0 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1rem;
+    border-radius: 0.5rem;
+  }
+
+  body {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    color: var(--color-silver-900);
+    background-color: var(--color-silver-50);
+  }
+}
+
+:root {
+  --button-height: 2rem;
+  --input-height: 2rem;
+  --control-padding: 0.5rem;
+}
+
+@layer components {
+  .btn {
+    @apply h-8 px-3 text-sm rounded;
+  }
+
+  .form-control {
+    @apply h-8 px-2 text-sm rounded;
+  }
+}
+
+@layer utilities {
+  .debug-vertical-grid {
+    background-image: linear-gradient(to bottom, rgba(255,0,0,0.1) 1px, transparent 1px);
+    background-size: 0 2rem;
+  }
 }

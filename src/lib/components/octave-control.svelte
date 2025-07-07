@@ -1,7 +1,6 @@
 <script>
-	import Icon from "@iconify/svelte";
-	import { patternStore } from "../stores/pattern.svelte";
-
+	import Icon from '@iconify/svelte'
+	import { patternStore } from '../stores/pattern.svelte'
 </script>
 
 <div class="octaveControl">
@@ -17,19 +16,19 @@
 	@reference "tailwindcss";
 	@reference "../styles/utilities.css";
 
+	.octaveControl {
+		@apply row;
+		@apply w-[64px] h-[32px] min-h-[32px];
+		@apply border-b border-black;
+	}
 
+	.octaveButton {
+		@apply w-[32px] h-[100%] text-black;
+		@apply flex flex-row items-center justify-center;
+		@apply border-r border-black;
 
-		 .octaveControl {
-			@apply row;
-			@apply w-[64px] h-[32px] min-h-[32px];
-			@apply border-b border-black;
+		&:hover {
+			@apply bg-black text-white;
 		}
-
-		 .octaveButton {
-			@apply w-[32px] h-[100%];
-			@apply flex flex-row items-center justify-center;
-			@apply border-r border-black;
-			@apply hover:bg-black hover:text-white;
-		}
-
+	}
 </style>
