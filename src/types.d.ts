@@ -1,4 +1,12 @@
-type VoicingT = 'open' | 'closed' | 'drop2' | 'drop3' | 'drop2and4' | 'rootless' | 'spread' | 'cluster'
+type VoicingT =
+	| 'open'
+	| 'closed'
+	| 'drop2'
+	| 'drop3'
+	| 'drop2and4'
+	| 'rootless'
+	| 'spread'
+	| 'cluster'
 type SignalMapT = Record<string, SignalT>
 type ToneMapT = Record<string, ToneT>
 
@@ -48,6 +56,7 @@ type ToneT = {
 	id: string
 	index: number
 	octave: number
+	totalIndex: number
 	signalIds: string[]
 }
 

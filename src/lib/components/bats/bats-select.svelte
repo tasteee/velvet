@@ -100,6 +100,10 @@
 		gap: 0.5rem;
 	}
 
+	:global .selectTriggerValue {
+		@apply overflow-hidden text-ellipsis whitespace-nowrap;
+	}
+
 	:global(.selectTriggerIcon) {
 		@apply size-5 text-silver-800;
 		flex-shrink: 0;
@@ -163,6 +167,7 @@
 	:global(.selectContentMoreIcon) {
 		@apply size-3;
 	}
+	
 	:global(.selectItem) {
 		@apply flex items-center w-full px-4 py-2 rounded-sm cursor-pointer transition-colors;
 		color: #111;

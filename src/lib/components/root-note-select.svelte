@@ -6,11 +6,10 @@
 	import CaretDoubleDown from 'phosphor-svelte/lib/CaretDoubleDown'
 	import BatsSelect from './bats/bats-select.svelte'
 	import type { SelectOptionT } from './bats/types'
-
-	let value = $state<string>('F#')
+	import { projectStore } from '$lib/stores/project.svelte'
 
 	const setValue = (newValue: string) => {
-		value = newValue
+		projectStore.state.scaleRootNote = newValue
 	}
 
 	const notes = [
@@ -31,7 +30,7 @@
 
 <BatsSelect
 	class="monoFont"
-	{value}
+	value={projectStore.state.scaleRootNote}
 	onchange={setValue}
 	options={notes}
 	placeholder="Select a root note"

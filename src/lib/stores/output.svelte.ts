@@ -1,40 +1,46 @@
-import type { Output } from "webmidi"
+import type { Output } from 'webmidi'
 import { WebMidi } from 'webmidi'
 import Soundfont from 'soundfont-player'
 import type { InstrumentName, Player } from 'soundfont-player'
-import { too } from "$lib/modules/too"
-import { createMidiEngine } from "$lib/modules/midiEngine"
+import { too } from '$lib/modules/too'
+import { createMidiEngine } from '$lib/modules/midiEngine'
 
 const engine = createMidiEngine()
 
-const state = $state({
-	volume: 0.7,
-	outputTarget: 'instrument',
-	isMidiReady: false,
-	midiOutputIds: [] as string[],
-	midiOutputId: '',
-	midiOutput: null! as any,
-	isMidiLoading: false,
-	midiError: null as any,
-	instrumentsError: null as any,
-	audioContext: null! as AudioContext,
+class OutputStore {
+	state = $state({
+		volume: 0.7,
+		isMuted: false,
+		isMidiReady: false,
+		isInstrumentReady: false,
+		isMidiConnected: false,
+		isMidiLoading: false,
+		isInstrumentLoading: false,
+		isOutputEnabled: false,
+		outputTarget: 'instrument',
+		instrumentName: 'acoustic_grand_piano',
+		instrument: null as any,
+		instruments: {} as Record<string, Player>,
+		instrumentsError: null as any,
+		audioContext: null! as AudioContext,
+		midiOutputIds: [] as string[],
+		midiOutputId: '',
+		midiOutput: null! as Output,
+		midiError: null as any,
+		instrumentNames: [
+			'acoustic_grand_piano',
+			'acoustic_guitar_nylon',
+			'electric_guitar_clean',
+			'xylophone',
+			'marimba'
+		]
+	})
 
-	isMidiConnected: false,
-	isOutputEnabled: false,
-	isInstrumentReady: false,
-	isInstrumentLoading: false,
-	instrumentName: 'acoustic_grand_piano',
-	instrument: null as any, // Soundfont player instance
-	instruments: {} as Record<string, any>,
-
-	instrumentNames: [
-		'acoustic_grand_piano',
-		'acoustic_guitar_nylon',
-		'electric_guitar_clean',
-		'xylophone',
-		'marimba'
-	]
-})
+	setSelectedInstrument = setSelectedInstrument
+	initialize = initialize
+	loadInstrument = loadInstrument
+	engine = engine
+}
 
 const setSelectedInstrument = (name: string) => {
 	outputStore.state.instrumentName = name
@@ -42,13 +48,13 @@ const setSelectedInstrument = (name: string) => {
 	outputStore.state.isInstrumentReady = !!outputStore.state.instrument
 }
 
-async function loadInstrument(context: AudioContext, name: InstrumentName) {
+const loadInstrument = async (context: AudioContext, name: InstrumentName) => {
 	return new Promise((resolve, reject) => {
 		Soundfont.instrument(context, name).then(resolve).catch(reject)
 	})
 }
 
-const prepareOutput = async () => {
+const initialize = async () => {
 	const context = new AudioContext()
 	outputStore.state.audioContext = context
 	outputStore.state.isInstrumentLoading = true
@@ -59,8 +65,8 @@ const prepareOutput = async () => {
 	const loader3 = loadInstrument(context, 'xylophone')
 	const loader4 = loadInstrument(context, 'marimba')
 	const instrumentPromises = [loader0, loader1, loader2, loader3, loader4]
-	const instrumentsResult = await too('instruments', Promise.all(instrumentPromises))
-	const midiConnectResult = await too('midi', WebMidi.enable())
+	const instrumentsResult = await too(Promise.all(instrumentPromises))
+	const midiConnectResult = await too(WebMidi.enable())
 
 	if (instrumentsResult.didFail) {
 		console.error('Error loading instruments:', instrumentsResult.error)
@@ -100,17 +106,14 @@ const prepareOutput = async () => {
 
 		const getId = (output: Output) => output.id
 		const ids = WebMidi.outputs.map(getId)
+		const midiOutput = WebMidi.getOutputById(ids[0]) as Output
 		outputStore.state.isMidiConnected = true
 		outputStore.state.midiOutputIds = ids
 		outputStore.state.midiOutputId = ids[0]
-		outputStore.state.midiOutput = WebMidi.getOutputById(ids[0])
-		console.warn('>>> handleMidiEnabled', { ...outputStore.state })
+		outputStore.state.midiOutput = midiOutput
+		outputStore.state.isMidiReady = true
+		console.warn('[midi ready]', { ids, midiOutput })
 	}
 }
 
-export const outputStore = {
-	get state() { return state },
-	engine,
-	prepareOutput,
-	setSelectedInstrument,
-}
+export const outputStore = new OutputStore()

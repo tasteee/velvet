@@ -6,10 +6,8 @@ type ReturnT<ResultT> = Promise<{
 	data: ResultT | null | undefined
 }>
 
-export async function too<ResultT>(label: string, promise: Promise<ResultT>): ReturnT<ResultT> {
+export async function too<ResultT>(promise: Promise<ResultT>): ReturnT<ResultT> {
 	const [error, data] = await to<ResultT>(promise)
-	if (error) console.error(`❌ ${label}: `, error)
-	if (!error) console.log(`✅ ${label}: `, data)
 	const final = { didFail: !!error, error, data }
 	return final
 }
