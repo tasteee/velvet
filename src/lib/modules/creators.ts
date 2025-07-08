@@ -1,7 +1,7 @@
-import { TONE_IDS } from "$lib/constants/toneRows"
-import { startClamp, endClamp, durationClamp } from "./clamps"
-import { numbers } from "./numbers"
-import { toneHelpers } from "./tones"
+import { TONE_IDS } from '$lib/constants/state/toneRows'
+import { startClamp, endClamp, durationClamp } from './clamps'
+import { numbers } from './numbers'
+import { toneHelpers } from './tones'
 
 export const createProgression = (overrides: Partial<ProgressionT> = {}): ProgressionT => {
 	return {
@@ -34,7 +34,8 @@ export const createSignal = (overrides: Partial<SignalT> = {}): SignalT => {
 	if (!overrides.toneId) console.error('createSignal: no toneId provided')
 	if (durationDivisions < 1) console.error('createSignal: durationDivisions must be at least 1')
 	if (startDivisions < 0) console.error('createSignal: startDivisions must be 0 or greater')
-	if (endDivisions < startDivisions) console.error('createSignal: endDivisions must be greater than or equal to startDivisions')
+	if (endDivisions < startDivisions)
+		console.error('createSignal: endDivisions must be greater than or equal to startDivisions')
 
 	return {
 		id,
@@ -43,7 +44,7 @@ export const createSignal = (overrides: Partial<SignalT> = {}): SignalT => {
 		maxVelocity: overrides.maxVelocity || 90,
 		startDivisions,
 		endDivisions,
-		durationDivisions,
+		durationDivisions
 	}
 }
 
@@ -67,7 +68,7 @@ export const createStep = (overrides: PartialStepT = {}): ProgressionStepT => {
 		maxVelocity: overrides.maxVelocity || 90,
 		startBeats,
 		endBeats,
-		durationBeats,
+		durationBeats
 	}
 }
 
@@ -76,6 +77,7 @@ export const createToneRow = (overrides: Partial<ToneT> = {}): ToneT => {
 		id: overrides.id || '',
 		index: overrides.index || 0,
 		octave: overrides.octave || 0,
+		totalIndex: overrides.totalIndex as number,
 		signalIds: overrides.signalIds || []
 	}
 }
@@ -85,15 +87,16 @@ export const createTone = (overrides: Partial<ToneT> = {}): ToneT => {
 		id: overrides.id || '',
 		index: overrides.index || 0,
 		octave: overrides.octave || 0,
+		totalIndex: overrides.totalIndex as number,
 		signalIds: overrides.signalIds || []
 	}
 }
 
 export const createToneMap = (): ToneMapT => {
-	return TONE_IDS.reduce((final, id) => {
+	return TONE_IDS.reduce((final, id, totalIndex) => {
 		const index = toneHelpers.getIdIndex(id) - 1
 		const octave = toneHelpers.getIdOctave(id)
-		const tone = createTone({ id, index, octave })
+		const tone = createTone({ id, index, octave, totalIndex })
 		final[id] = tone
 		return final
 	}, {} as ToneMapT)

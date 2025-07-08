@@ -1,8 +1,0 @@
-export const PATTERN_GRID = {
-	DIVISIONS_PER_BEAT: 4,
-	BEAT_WIDTH: 40,
-	DIVISION_WIDTH: 10,
-	ROW_HEIGHT: 32
-}
-
-export const PPQ = 96

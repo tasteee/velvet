@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onDestroy } from 'svelte'
+	import { onDestroy, untrack } from 'svelte'
 	import { patternStore } from '$lib/stores/pattern.svelte'
 	import { inputStore } from '$lib/stores/input.svelte'
 
@@ -7,6 +7,7 @@
 
 	let ref = $state<HTMLElement>(null!)
 	let hasInitialized = $state(false)
+	let previousIsSelecting = $state(false)
 
 	const minX = $derived(Math.min(props.originX, props.currentX))
 	const minY = $derived(Math.min(props.originY, props.currentY))
@@ -30,36 +31,37 @@
 	}
 
 	$effect(() => {
-		// Once it begins selecting, initialize.
-		// Then we will look out for when selecting
-		// stops (!props.isSelecting) to do calculations.
-		// We have to do the initialization so that we
-		// do not do calculations before selection ever happens.
+		// Track the previous selecting state
 		if (props.isSelecting) {
-			console.log('SelectionBox initialized')
-			hasInitialized = true
+			previousIsSelecting = true
 			return
 		}
 
-		if (!props.isSelecting && hasInitialized) {
-			console.log('selection stopped, running calculations...')
-			const shift = inputStore.isPressedShift
-			const alt = inputStore.isPressedAlt
-			const allSignals = Array.from(document.querySelectorAll('[data-signal-id]'))
-			const boxRect = ref.getBoundingClientRect()
+		// If we WERE previously selecting and now we are not.
+		// That means selection ended, and we need to do our calculations.
+		if (!props.isSelecting && previousIsSelecting) {
+			previousIsSelecting = false
 
-			const intersectedIds = allSignals.reduce((final, element: Element) => {
-				const rect = element.getBoundingClientRect()
-				const id = element.getAttribute('data-signal-id') as string
-				const doesIntersect = checkIntersection(boxRect, rect)
-				if (!doesIntersect) return final
-				final.push(id)
-				return final
-			}, [] as string[])
+			// Use untrack to prevent this effect from running again due to store updates
+			untrack(() => {
+				const isShift = inputStore.isPressedShift
+				const isAlt = inputStore.isPressedAlt
+				const allSignals = Array.from(document.querySelectorAll('[data-signal-id]'))
+				const boxRect = ref.getBoundingClientRect()
 
-			if (shift && !alt) return patternStore.addSelectedSignalIds(intersectedIds)
-			if (alt && !shift) return patternStore.removeSelectedSignalIds(intersectedIds)
-			patternStore.setSelectedSignalIds(intersectedIds)
+				const intersectedIds = allSignals.reduce((final, element: Element) => {
+					const rect = element.getBoundingClientRect()
+					const id = element.getAttribute('data-signal-id') as string
+					const doesIntersect = checkIntersection(boxRect, rect)
+					if (!doesIntersect) return final
+					final.push(id)
+					return final
+				}, [] as string[])
+
+				if (isShift && !isAlt) return patternStore.addSelectedSignalIds(intersectedIds)
+				if (isAlt && !isShift) return patternStore.removeSelectedSignalIds(intersectedIds)
+				patternStore.setSelectedSignalIds(intersectedIds)
+			})
 		}
 	})
 </script>
@@ -80,10 +82,10 @@
 
 	@layer components {
 		.selectionBox {
-			@apply absolute border-2 border-dashed border-silver-500 bg-silver-100 opacity-50;
+			@apply absolute border-3 border-dashed border-dress-300 bg-dress-100 opacity-50;
 			@apply pointer-events-none;
 			@apply z-20;
-			@apply bg-lavender-500/10;
+			@apply bg-dress-500/5;
 		}
 	}
 </style>

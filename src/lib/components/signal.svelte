@@ -1,6 +1,7 @@
 <script lang="ts">
-	import { PATTERN_GRID } from '$lib/constants/general'
+	import { PATTERN_GRID } from '$lib/constants/state'
 	import { inputStore } from '$lib/stores/input.svelte'
+	import { onMount } from 'svelte'
 	import { patternStore } from '../stores/pattern.svelte'
 	import SignalHandle from './signal-handle.svelte'
 
@@ -23,7 +24,6 @@
 
 	let isHovered = $state(false)
 
-	const SIGNAL_HEIGHT = 30
 	let dragOffsetX = 0
 	let dragOffsetY = 0
 	let dragStartX = 0
@@ -32,6 +32,7 @@
 	let pointerStartY = 0
 	let startDivisionsAtDragStart = 0
 	let toneIndexAtDragStart = 0
+	let isPointerDown = $state(false)
 
 	const eraseSignal = (event: PointerEvent) => {
 		const isRightButton = event.button === 2
@@ -51,10 +52,9 @@
 		if (event.button === 2) return eraseSignal(event)
 		if (event.button !== 0) return
 
+		isPointerDown = true
 		tempLeft = statePositionLeft
 		tempTop = statePositionTop
-		isDragging = true
-		ref.setPointerCapture(event.pointerId)
 
 		pointerStartX = event.clientX
 		pointerStartY = event.clientY
@@ -62,11 +62,44 @@
 		dragStartY = statePositionTop
 		startDivisionsAtDragStart = signal.startDivisions
 		toneIndexAtDragStart = tone.index
-		patternStore.setSelectedSignalIds([props.id]) // Ensure the signal is selected on drag start
 	}
 
-	function onPointerMove(event: PointerEvent) {
+	// If the pointer escapes the signals bounds and then
+	// pointer is releassed, we need to still handle the
+	// pointerup. So we set up a global pointerup and IF
+	// this signals state is isPointerDown, then onPointerUp.
+	const handleGlobalPointerUp = (event: PointerEvent) => {
+		if (isPointerDown) {
+			onPointerUp(event)
+		}
+	}
+
+	// The user clicks down on and immediately begins
+	// dragging a signal -- we need to check to see if
+	// it IS being dragged but it is NOT selected, then
+	// make it the selected signal.
+	$effect(() => {
 		if (!isDragging) return
+		if (!isSelected) patternStore.setSelectedSignalIds([props.id])
+	})
+
+	onMount(() => {
+		document.addEventListener('pointerup', handleGlobalPointerUp)
+		return () => document.removeEventListener('pointerup', handleGlobalPointerUp)
+	})
+
+	function onPointerMove(event: PointerEvent) {
+		if (!isPointerDown) return
+
+		if (!isDragging) {
+			const deltaX = Math.abs(event.clientX - pointerStartX)
+			const deltaY = Math.abs(event.clientY - pointerStartY)
+			const exceedsThreshold = deltaX >= 6 || deltaY >= 6
+			if (!exceedsThreshold) return
+			isDragging = true
+			ref.setPointerCapture(event.pointerId)
+		}
+
 		dragOffsetX = event.clientX - pointerStartX
 		dragOffsetY = event.clientY - pointerStartY
 		tempLeft = dragStartX + dragOffsetX
@@ -74,43 +107,38 @@
 	}
 
 	function onPointerUp(event: PointerEvent) {
+		isPointerDown = false
 		if (!isDragging) return
 		ref.releasePointerCapture(event.pointerId)
-
-		const totalDeltaX = dragStartX + dragOffsetX
-		const divisionChangeX =
-			Math.round(totalDeltaX / PATTERN_GRID.DIVISION_WIDTH) - startDivisionsAtDragStart
-		const newStartDivisions = startDivisionsAtDragStart + divisionChangeX
-
-		// Use the vertical center of the signal for tone calculation
-		const finalTop = dragStartY + dragOffsetY
-		const centerY = finalTop + SIGNAL_HEIGHT / 2
+		const newStartDivisions = Math.max(0, Math.round(tempLeft / PATTERN_GRID.DIVISION_WIDTH))
+		const centerY = tempTop + 30 / 2
 		const newToneIndex = Math.floor(centerY / PATTERN_GRID.ROW_HEIGHT)
-
 		const newTone = patternStore.getActiveToneWithIndex(newToneIndex)
 		const toneId = newTone?.id ?? signal.toneId
-
-		const finalStartDivisions = Math.max(0, newStartDivisions)
 		const durationDivisions = signal.durationDivisions
-		const endDivisions = finalStartDivisions + durationDivisions
+		const endDivisions = newStartDivisions + durationDivisions
 
 		patternStore.updateSignal({
 			id: props.id,
 			toneId,
-			startDivisions: finalStartDivisions,
+			startDivisions: newStartDivisions,
 			endDivisions,
 			durationDivisions
 		})
 
-		// Reset drag state
-		dragOffsetX = 0
-		dragOffsetY = 0
-
 		setTimeout(() => {
+			isDragging = false
 			tempLeft = 0
 			tempTop = 0
-			isDragging = false
-		}, 10)
+			dragOffsetX = 0
+			dragOffsetY = 0
+			dragStartX = 0
+			dragStartY = 0
+			pointerStartX = 0
+			pointerStartY = 0
+			startDivisionsAtDragStart = 0
+			toneIndexAtDragStart = 0
+		}, 25)
 	}
 
 	$effect(() => {
@@ -125,14 +153,27 @@
 		}
 	})
 
-	function selectSignal(event: MouseEvent) {
+	const onClick = (event: MouseEvent) => {
+		if (isDragging) return
+
 		event.preventDefault()
 		event.stopPropagation()
 		const isShift = inputStore.isPressedShift
 		const isAlt = inputStore.isPressedAlt
-		if (isShift && !isAlt) patternStore.addSelectedSignalIds([props.id])
-		else if (isAlt && !isShift) patternStore.removeSelectedSignalIds([props.id])
-		else patternStore.setSelectedSignalIds([props.id])
+		const selectedIds = [...patternStore.state.selectedSignalIds]
+		console.log({ isAlt, selectedIds, id: props.id })
+
+		if (isShift && !isAlt) {
+			if (isSelected) {
+				return patternStore.removeSelectedSignalIds([props.id])
+			} else {
+				return patternStore.addSelectedSignalIds([props.id])
+			}
+		} else if (isAlt && !isShift) {
+			return patternStore.removeSelectedSignalIds([props.id])
+		} else {
+			patternStore.setSelectedSignalIds([props.id])
+		}
 	}
 </script>
 
@@ -154,10 +195,10 @@
 		style:width={signal.durationDivisions * PATTERN_GRID.DIVISION_WIDTH + 'px'}
 		class:isDragging
 		class:isSelected
-		onclick={selectSignal}
+		onclick={onClick}
 		style:left={position.left + 'px'}
 		style:top={position.top + 0.5 + 'px'}
-		style:z-index={isDragging ? 1000 : 10}
+		style:z-index={isSelected ? 1000 : 10}
 	></button>
 	{#if !isDragging}
 		<SignalHandle id={props.id} side="right" {isHovered} />
@@ -169,32 +210,40 @@
 	@reference '../styles/utilities.css';
 
 	@layer components {
-		.signal {
-			all: unset;
-			@apply absolute h-[30px] bg-silver-950 border border-silver-200 rounded-sm;
-			@apply transition-all duration-[20ms] ease-in;
-			@apply hover:bg-silver-500;
-			@apply z-10 min-w-[10px];
-			background: linear-gradient(to top, #000, var(--color-silver-950));
-			touch-action: none; /* Prevent scrolling while dragging on touch */
-			user-select: none;
-			cursor: pointer;
-		}
-		body:has(.signal.isDragging) {
-			cursor: none !important;
-		}
-		.signal.isDragging {
-			box-shadow: var(--shadow-lg);
-			cursor: grabbing;
-		}
+		:global {
+			body:has(.signal.isDragging) {
+				cursor: none !important;
+			}
 
-		.signal.isSelected {
-			background: linear-gradient(to top, var(--color-lavender-950), var(--color-lavender-800));
-			border-color: var(--color-lavender-300);	
-		}
+			.signal {
+				all: unset;
+				@apply absolute h-[30px] bg-silver-950 border border-silver-200 rounded-sm;
+				@apply hover:bg-silver-500;
+				@apply z-10 min-w-[10px];
+				background: linear-gradient(to top, #000, var(--color-silver-950));
+				touch-action: none; /* Prevent scrolling while dragging on touch */
+				user-select: none;
+				cursor: pointer;
+			}
 
-		.signal.isSelected:not(.isDragging) {
-			box-shadow: var(--shadow-mini);
+			.signal.isDragging {
+				/* transition: all 0.025s ease-in-out; */
+				box-shadow: var(--shadow-lg);
+				cursor: grabbing;
+				transition: none;
+			}
+
+			.signal.isSelected {
+				/* transition: all 0.05s ease-in-out; */
+				@apply bg-gradient-to-t from-dress-800 to-dress-600 border-lavender-300;
+				border: none;
+				outline: inset 2px var(--color-dress-950);
+				z-index: 250000;
+			}
+
+			.signal.isSelected:not(.isDragging) {
+				box-shadow: var(--shadow-mini);
+			}
 		}
 	}
 </style>

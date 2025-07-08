@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { PATTERN_GRID } from '$lib/constants/general'
+	import { PATTERN_GRID } from '$lib/constants/state'
 	import { durationClamp, startClamp } from '$lib/modules/clamps'
 	import { patternStore } from '../stores/pattern.svelte'
 	import { draggable, type DragEventData, type DragOptions } from '@neodrag/svelte'
@@ -112,7 +112,7 @@
 		}
 
 		.signalHandle.isHovered {
-			opacity: 1;
+			opacity: 0;
 		}
 	}
 

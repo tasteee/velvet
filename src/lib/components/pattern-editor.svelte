@@ -4,7 +4,10 @@
 	import { patternStore } from '../stores/pattern.svelte'
 	import OctaveControl from './octave-control.svelte'
 	import Toolbar from './pattern-editor-toolbar.svelte'
-	import { PATTERN_GRID } from '$lib/constants/general'
+	import { PATTERN_GRID } from '$lib/constants/state'
+	import { inputStore } from '$lib/stores/input.svelte'
+	import { just } from '$lib/modules/just'
+	import { numbers } from '$lib/modules/numbers'
 
 	const columnIndexes = $derived(range(128))
 	const beatsWidth = $derived(PATTERN_GRID.BEAT_WIDTH + 'px')
@@ -13,25 +16,90 @@
 	// TODO: Shift click / alt click tone label for fine grained selection.
 
 	const selectAllToneSignals = (id: string) => {
-		console.log('allSignals ', Object.values(patternStore.state.signalMap))
 		const signalIds = Object.values(patternStore.state.signalMap)
 		.filter(signal => signal.toneId === id)
 		.map(signal => signal.id)
 		
-		console.log('selectAllToneSignals', { id, signalIds })
+		if (inputStore.isPressedShift) return patternStore.addSelectedSignalIds(signalIds)
+		if (inputStore.isPressedAlt) return patternStore.removeSelectedSignalIds(signalIds)
 		patternStore.setSelectedSignalIds(signalIds)
 	}
+
+	const onKeyDown = just.throttle(135, (event: KeyboardEvent) => {
+		if (patternStore.selectedSignals.length === 0) return
+		event.preventDefault()
+		event.stopPropagation()
+
+		const isCtrlPressed = event.ctrlKey || event.metaKey
+
+		if (event.key === 'Escape') {
+			patternStore.clearSelectedSignalIds()
+		}
+
+		if (event.key === 'Delete' || event.key === 'Backspace') {
+			const ids = patternStore.state.selectedSignalIds
+			patternStore.eraseSignals(ids)
+		}
+
+		if (event.key === 'ArrowLeft') {
+			const signals = patternStore.selectedSignals
+			const distance = isCtrlPressed ? 1 : 4
+
+			signals.forEach(signal => {
+				signal.startDivisions -= distance
+				signal.endDivisions -= distance
+			})
+		}
+
+		if (event.key === 'ArrowRight') {
+			const signals = patternStore.selectedSignals
+			const distance = isCtrlPressed ? 1 : 4
+
+			signals.forEach(signal => {
+				signal.startDivisions += distance
+				signal.endDivisions += distance
+			})
+		}
+
+		if (event.key === 'ArrowUp') {
+			const signals = patternStore.selectedSignals
+
+			signals.forEach(signal => {
+				const tone = patternStore.state.toneMap[signal.toneId]
+				const nextToneIndex = numbers.loopClamp(0, tone.totalIndex + 1, 39)
+				const newTone = patternStore.getToneByTotalIndex(nextToneIndex)
+				signal.toneId = newTone.id
+			})
+		}
+
+		if (event.key === 'ArrowDown') {
+			const signals = patternStore.selectedSignals
+
+			signals.forEach(signal => {
+				const tone = patternStore.state.toneMap[signal.toneId]
+				const nextToneIndex = numbers.loopClamp(0, tone.totalIndex - 1, 39)
+				const newTone = patternStore.getToneByTotalIndex(nextToneIndex)
+				if (!newTone) debugger;
+				signal.toneId = newTone.id	
+			})
+		}
+	})
+
+
 </script>
 
+<svelte:window onkeydown={onKeyDown} />
+
 <div
-	class="patternEditorContainer p-12 w-full column gap-2 xCenter yCenter"
+	role="table"
+	class="patternEditorContainer column gap-2 xCenter yCenter"
 	style:--beatWidth={beatsWidth}
 	oncontextmenu={(event) => {
 		event.preventDefault()
 	}}
 >
 	<div class="patternEditorControls">
-		<Toolbar />
+		<!-- <Toolbar /> -->
 	</div>
 
 	<div class="patternEditor row">
@@ -48,7 +116,7 @@
 			</div>
 		</div>
 
-		<div id="rightSide" class="column w-full">
+		<div id="rightSide" class="column">
 			<div class="timingLabels">
 				{#each columnIndexes as index}
 					<div class="timingLabelBox">
@@ -68,12 +136,16 @@
 	@reference '../styles/utilities.css';
 
 	@layer components {
+		.patternEditorContainer {
+			/* padding: 12px; */
+		}
+
 		.patternEditorControls {
-			width: 100%;
 		}
 
 		.patternEditor {
-			@apply w-full row monoFont;
+			user-select: none;
+			max-width: 100%;
 			@apply border border-black rounded-sm shadow-sm;
 			@apply bg-silver-100;
 			height: 288px;
@@ -87,6 +159,7 @@
 		#rightSide {
 			@apply h-full;
 			@apply overflow-scroll;
+			width: 100%;
 			overflow-y: hidden;
 
 			&::-webkit-scrollbar {

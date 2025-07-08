@@ -22,11 +22,12 @@
 // note for the chord when converting the SignalT[] to MidiSignalT[].
 
 import type { InstrumentName } from 'soundfont-player'
-import { createProgression } from "./creators"
-import { theory } from "./theory"
-import { PPQ } from "../constants/general"
+import { createProgression } from './creators'
+import { theory } from './theory'
+import { PPQ } from '../constants/state'
 import { outputStore } from '$lib/stores/output.svelte'
-import { just } from "./just"
+import { just } from './just'
+import random from 'random'
 
 type MidiEngineT = {
 	setSignals: (signals: SignalT[]) => void
@@ -43,7 +44,6 @@ type StoreT = {
 	toneMaps: Record<number, Record<string, number>>
 	midiSignals: MidiSignalT[]
 	scheduledTimeouts: ReturnType<typeof setTimeout>[]
-
 }
 
 const createInitialStore = (): StoreT => {
@@ -53,7 +53,7 @@ const createInitialStore = (): StoreT => {
 		midiSignals: [],
 		isPlaying: false,
 		scheduledTimeouts: [],
-		progression: createProgression(),
+		progression: createProgression()
 	}
 }
 
@@ -86,17 +86,18 @@ export const createMidiEngine = (): MidiEngineT => {
 			const toneMap = store.toneMaps[stepIndex]
 			const stepStartTicks = theory.getBeatsTicks(step.startBeats)
 
-			store.signals.forEach(signal => {
+			store.signals.forEach((signal) => {
 				const note = toneMap[signal.toneId]
 				const startTicks = stepStartTicks + theory.getDivisionsTicks(signal.startDivisions)
 				const endTicks = stepStartTicks + theory.getDivisionsTicks(signal.endDivisions)
+				const velocity = random.int(signal.minVelocity, signal.maxVelocity)
 
 				midiSignals.push({
 					id: signal.id,
 					note,
 					startTicks,
 					endTicks,
-					velocity: signal.velocity
+					velocity
 				})
 			})
 		})
@@ -120,27 +121,30 @@ export const createMidiEngine = (): MidiEngineT => {
 		if (isOutputMidi) {
 			if (!midiOutput) return console.error('MIDI output not available')
 
-			store.midiSignals.forEach(signal => {
+			store.midiSignals.forEach((signal) => {
 				const noteOnTime = now + ticksToMs(signal.startTicks)
 				const noteOffTime = now + ticksToMs(signal.endTicks)
 				const velocity = signal.velocity / 127
 
-				store.scheduledTimeouts.push(setTimeout(() => {
-					midiOutput.send([0x90, signal.note, velocity * 127])
-				}, noteOnTime - performance.now()))
+				store.scheduledTimeouts.push(
+					setTimeout(() => {
+						midiOutput.send([0x90, signal.note, velocity * 127])
+					}, noteOnTime - performance.now())
+				)
 
-				store.scheduledTimeouts.push(setTimeout(() => {
-					midiOutput.send([0x80, signal.note, 0])
-				}, noteOffTime - performance.now()))
+				store.scheduledTimeouts.push(
+					setTimeout(() => {
+						midiOutput.send([0x80, signal.note, 0])
+					}, noteOffTime - performance.now())
+				)
 			})
 		}
 
 		if (isOutputInstrument) {
 			const instrumentKey = outputStore.state.instrumentName as InstrumentName
-			if (!instrumentKey || !outputStore.state.loadedInstruments[instrumentKey]) return
+			if (!instrumentKey || !outputStore.state.instruments[instrumentKey]) return
 
-
-			store.midiSignals.forEach(signal => {
+			store.midiSignals.forEach((signal) => {
 				const currentTime = audioContext.currentTime
 				const time = currentTime + ticksToMs(signal.startTicks) / 1000
 				const duration = (signal.endTicks - signal.startTicks) / PPQ
@@ -154,7 +158,7 @@ export const createMidiEngine = (): MidiEngineT => {
 	}
 
 	const clearScheduled = () => {
-		store.scheduledTimeouts.forEach(timeout => clearTimeout(timeout))
+		store.scheduledTimeouts.forEach((timeout) => clearTimeout(timeout))
 		outputStore.state.audioContext.close()
 		outputStore.state.instrument.stop()
 		store.scheduledTimeouts = []
@@ -197,7 +201,7 @@ const generateToneMapForChord = (chord: ChordT): Record<string, number> => {
 		const chordNote = chord.notes[noteIndex % chord.notes.length]
 
 		for (let octaveShift = -2; octaveShift <= 2; octaveShift++) {
-			const toneId = `T${toneIndex}${octaveShift === 0 ? '' : (octaveShift > 0 ? `+${octaveShift}` : `${octaveShift}`)}`
+			const toneId = `T${toneIndex}${octaveShift === 0 ? '' : octaveShift > 0 ? `+${octaveShift}` : `${octaveShift}`}`
 			const midiNote = theory.getAdjustedOctavedNote(chordNote, chord.octave + octaveShift) // e.g., "C4", "D#5", etc.
 			map[toneId] = theory.getNoteNumber(midiNote)
 		}
@@ -205,4 +209,3 @@ const generateToneMapForChord = (chord: ChordT): Record<string, number> => {
 
 	return map
 }
-
