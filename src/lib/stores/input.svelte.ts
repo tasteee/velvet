@@ -70,6 +70,10 @@ class InputStore {
 	isWASDPressed = $derived.by(() => arrays.includesSome(this.pressedKeys, WASD_KEYS))
 	isRotatorPressed = $derived.by(() => arrays.includesSome(this.pressedKeys, ROTATOR_KEYS))
 
+	isRightClicked = $state(false)
+	isLeftClicked = $state(false)
+	isMiddleClicked = $state(false)
+
 	handleKey = (isPressing: boolean) => (event: KeyboardEvent) => {
 		if (event.repeat) return
 		const key = getKey(event)
@@ -88,18 +92,23 @@ class InputStore {
 		this.mouseY = event.clientY
 	}
 
-	handleMouseDown = () => {
+	handleMouseDown = (event: MouseEvent) => {
 		this.isMouseDown = true
+		this.isRightClicked = event.button === 2 // Right mouse button
+		this.isLeftClicked = event.button === 0 // Left mouse button
+		this.isMiddleClicked = event.button === 1 // Middle mouse button
 	}
 
-	handleMouseUp = () => {
+	handleMouseUp = (event: MouseEvent) => {
 		this.isMouseDown = false
+		if (event.button === 2) this.isRightClicked = false // Right mouse button
+		if (event.button === 0) this.isLeftClicked = false // Left mouse button
+		if (event.button === 1) this.isMiddleClicked = false // Middle mouse button
 	}
 
 	handleFirstClick = () => {
 		document.removeEventListener('click', this.handleFirstClick)
 		this.hasMouseClicked = true
-		console.log('handleFirstClic\n\n')
 	}
 
 	start = () => {
@@ -121,5 +130,3 @@ class InputStore {
 }
 
 export const inputStore = new InputStore()
-// globalThis.inputStore = inputStore
-// globalThis.getCurrentPressedKeys = () => $state.snapshot(inputStore.pressedKeys)

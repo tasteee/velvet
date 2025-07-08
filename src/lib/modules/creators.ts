@@ -1,4 +1,5 @@
 import { TONE_IDS } from "$lib/constants/toneRows"
+import { startClamp, endClamp, durationClamp } from "./clamps"
 import { numbers } from "./numbers"
 import { toneHelpers } from "./tones"
 
@@ -24,17 +25,11 @@ export const createPattern = (overrides: Partial<PatternT> = {}): PatternT => {
 	}
 }
 
-// signal can start anywhere between 0 and 127 divisions
-// signal can end anywhere between 1 and 128 divisions
-const maxDivisions = 128 * 4
-const startClamp = numbers.createClamp({ min: 0, max: maxDivisions - 1 })
-const endClamp = numbers.createClamp({ min: 1, max: maxDivisions })
-
 export const createSignal = (overrides: Partial<SignalT> = {}): SignalT => {
 	const id = overrides.id || crypto.randomUUID()
 	const startDivisions = startClamp(overrides.startDivisions || 0)
 	const endDivisions = endClamp(overrides.endDivisions || 0)
-	const durationDivisions = endDivisions - startDivisions
+	const durationDivisions = durationClamp(overrides.durationDivisions || 0)
 
 	if (!overrides.toneId) console.error('createSignal: no toneId provided')
 	if (durationDivisions < 1) console.error('createSignal: durationDivisions must be at least 1')

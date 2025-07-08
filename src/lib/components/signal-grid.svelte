@@ -76,19 +76,40 @@
 		selectionCurrentY = currentY
 	}
 
+	const TONE_SNAP_MAP = {
+		8: 7,
+		7: 6,
+		6: 5,
+		5: 4,
+		4: 3,
+		3: 2,
+		2: 1,
+		1: 0,
+	}
+
 	// On mouse up when isSelecting is false, we find the
 	// division where the mouse was clicked and insert
 	// a signal there.
 	const onClickMouseUp = () => {
+		console.log('startY', startY)
+		console.log('divided', startY / PATTERN_GRID.ROW_HEIGHT)
+		console.log('floored', Math.floor(startY / PATTERN_GRID.ROW_HEIGHT))
+		
 		const snappedLeft = Math.floor(startX / PATTERN_GRID.DIVISION_WIDTH)
-		const snappedTop = Math.floor(startY / PATTERN_GRID.ROW_HEIGHT)
+		const toneSnapIndex = Math.floor(startY / PATTERN_GRID.ROW_HEIGHT)
+		console.log('toneSnapIndex', toneSnapIndex)
+		const snappedTop = TONE_SNAP_MAP[toneSnapIndex as keyof typeof TONE_SNAP_MAP] || 0
+		console.log('snappedTop', snappedTop)
 		const tone = patternStore.getActiveToneWithIndex(snappedTop)
+		// console.log({ toneSnapIndex, snappedTop, toneId: tone?.id })
 		patternStore.clearSelectedSignalIds()
+
+		console.log('creating signal on tone', { tone, id: tone.id })
 
 		patternStore.addSignal({
 			toneId: tone.id,
 			startDivisions: snappedLeft,
-			endDivisions: snappedLeft + 1,
+			endDivisions: snappedLeft + 4,
 			durationDivisions: 4
 		})
 	}
@@ -98,14 +119,14 @@
 	{#each patternStore.signalIds as signalId, index}
 		<Signal id={signalId} {index} />
 	{/each}
-	{#if isSelecting}
-		<SelectionBox
-			originX={selectionOriginX}
-			originY={selectionOriginY}
-			currentX={selectionCurrentX}
-			currentY={selectionCurrentY}
-		/>
-	{/if}
+
+	<SelectionBox
+		{isSelecting}
+		originX={selectionOriginX}
+		originY={selectionOriginY}
+		currentX={selectionCurrentX}
+		currentY={selectionCurrentY}
+	/>
 </div>
 
 <style lang="postcss">
@@ -113,12 +134,42 @@
 	@reference '../styles/utilities.css';
 
 	@layer components {
-		#signalGrid {
+		:global #signalGrid {
 			--beatWidth: 40px;
 
-			@apply h-full relative overflow-hidden;
-			width: calc(var(--beatWidth) * 128);
-			background-image: repeating-linear-gradient(
+			--bgNoDragging: repeating-linear-gradient(
+					to right,
+					transparent 0px,
+					transparent calc(var(--beatWidth) - 1px),
+					rgba(0, 0, 0, 0.2) var(--beatWidth),
+					rgba(0, 0, 0, 0.2) var(--beatWidth)
+				),
+				/* Beat group shading */
+					repeating-linear-gradient(
+						to right,
+						rgba(0, 0, 0, 0.02) 0px,
+						rgba(0, 0, 0, 0.02) calc(var(--beatWidth) * 4),
+						rgba(0, 0, 0, 0.05) calc(var(--beatWidth) * 4),
+						rgba(0, 0, 0, 0.05) calc(var(--beatWidth) * 8)
+					),
+				/* Main horizontal lines */
+					repeating-linear-gradient(
+						to bottom,
+						transparent 0px,
+						transparent 31px,
+						rgba(0, 0, 0, 0.2) 32px,
+						rgba(0, 0, 0, 0.2) 32px
+					),
+				/* Horizontal group shading */
+					repeating-linear-gradient(
+						to bottom,
+						rgba(0, 0, 0, 0.02) 0px,
+						rgba(0, 0, 0, 0.02) 128px,
+						rgba(0, 0, 0, 0.05) 128px,
+						rgba(0, 0, 0, 0.05) 256px
+					);
+
+			--bgDragging: repeating-linear-gradient(
 					to right,
 					transparent 0px,
 					transparent calc(var(--beatWidth) - 1px),
@@ -127,25 +178,53 @@
 				),
 				repeating-linear-gradient(
 					to right,
-					rgba(0, 0, 0, 0.02) 0px,
-					rgba(0, 0, 0, 0.02) calc(var(--beatWidth) * 4),
-					rgba(0, 0, 0, 0.05) calc(var(--beatWidth) * 4),
-					rgba(0, 0, 0, 0.05) calc(var(--beatWidth) * 8)
-				),
-				repeating-linear-gradient(
-					to bottom,
 					transparent 0px,
-					transparent 31px,
-					rgba(0, 0, 0, 0.2) 32px,
-					rgba(0, 0, 0, 0.2) 32px
+					transparent calc(var(--beatWidth) / 4 - 1px),
+					rgba(0, 0, 0, 0.07) calc(var(--beatWidth) / 4),
+					rgba(0, 0, 0, 0.07) calc(var(--beatWidth) / 4),
+					transparent calc(var(--beatWidth) / 4 + 1px),
+					transparent calc(var(--beatWidth) / 2 - 1px),
+					rgba(0, 0, 0, 0.07) calc(var(--beatWidth) / 2),
+					rgba(0, 0, 0, 0.07) calc(var(--beatWidth) / 2),
+					transparent calc(var(--beatWidth) / 2 + 1px),
+					transparent calc(var(--beatWidth) * 3 / 4 - 1px),
+					rgba(0, 0, 0, 0.07) calc(var(--beatWidth) * 3 / 4),
+					rgba(0, 0, 0, 0.07) calc(var(--beatWidth) * 3 / 4),
+					transparent calc(var(--beatWidth) * 3 / 4 + 1px),
+					transparent var(--beatWidth)
 				),
-				repeating-linear-gradient(
-					to bottom,
-					rgba(0, 0, 0, 0.02) 0px,
-					rgba(0, 0, 0, 0.02) 128px,
-					rgba(0, 0, 0, 0.05) 128px,
-					rgba(0, 0, 0, 0.05) 256px
-				);
+				/* Beat group shading */
+					repeating-linear-gradient(
+						to right,
+						rgba(0, 0, 0, 0.02) 0px,
+						rgba(0, 0, 0, 0.02) calc(var(--beatWidth) * 4),
+						rgba(0, 0, 0, 0.05) calc(var(--beatWidth) * 4),
+						rgba(0, 0, 0, 0.05) calc(var(--beatWidth) * 8)
+					),
+				/* Main horizontal lines */
+					repeating-linear-gradient(
+						to bottom,
+						transparent 0px,
+						transparent 31px,
+						rgba(0, 0, 0, 0.2) 32px,
+						rgba(0, 0, 0, 0.2) 32px
+					),
+				/* Horizontal group shading */
+					repeating-linear-gradient(
+						to bottom,
+						rgba(0, 0, 0, 0.02) 0px,
+						rgba(0, 0, 0, 0.02) 128px,
+						rgba(0, 0, 0, 0.05) 128px,
+						rgba(0, 0, 0, 0.05) 256px
+					);
+
+			@apply h-full relative overflow-hidden;
+			width: calc(var(--beatWidth) * 128);
+			background: var(--bgNoDragging);
+		}
+
+		:global body.isDraggingSignal #signalGrid {
+			background: var(--bgDragging);
 		}
 	}
 </style>

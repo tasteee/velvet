@@ -1,0 +1,41 @@
+@reference 'tailwindcss'
+@reference '../../styles/utilities.css'
+@reference '../../styles/tokens.css'
+
+	
+.batsToggleGroup {
+	@apply flex items-center gap-1;
+	@apply border border-black rounded-sm;
+	background: linear-gradient(180deg, var(--color-silver-50), var(--color-silver-300));
+}
+
+.batsToggleGroupItem {
+	@apply inline-flex items-center justify-center rounded-sm transition-all active:scale-[0.98];
+	width: 28px;
+	height: 28px;
+	color: var(--black);
+	background: transparent;
+}
+
+.batsToggleGroupItem:hover {
+	background: var(--color-silver-100);
+}
+
+.batsToggleGroupItem.isSelected {
+	background: linear-gradient(to top, #000, var(--color-silver-950));
+}
+
+.batsToggleGroupItem[data-state='on'] {
+	color: var(--white);
+	background: linear-gradient(to top, #000, var(--color-silver-950));
+	box-shadow: var(--shadow-mini);
+}
+
+.batsToggleGroupItem[data-state='on']:hover {
+	background: linear-gradient(to top, #000, var(--color-silver-900));
+	box-shadow: var(--shadow-lg);
+}
+
+.batsToggleGroupItemIcon {
+	@apply size-5;
+}

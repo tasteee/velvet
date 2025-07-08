@@ -1,5 +1,6 @@
 <script lang="ts">
 	import RootNoteSelect from './root-note-select.svelte'
+	import ScaleTypeSelect from './scale-type-select.svelte'
 	import Button from '$lib/components/bats/bats-button.svelte'
 </script>
 
@@ -8,9 +9,7 @@
 	<div class="rightColumn column">
 		<div class="optionsRow row gap-4">
 			<RootNoteSelect />
-			<Button label="Solid" variant="solid" onclick={console.log} />
-			<Button label="Subtle" variant="subtle" onclick={console.log} />
-			<Button label="Ghost" variant="ghost" onclick={console.log} />
+			<ScaleTypeSelect />
 		</div>
 	</div>
 </div>

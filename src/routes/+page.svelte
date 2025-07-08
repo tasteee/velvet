@@ -3,8 +3,10 @@
 	import PatternEditor from '$lib/components/pattern-editor.svelte'
 	import { onMount } from 'svelte'
 	import { outputStore } from '$lib/stores/output.svelte'
+	import { inputStore } from '$lib/stores/input.svelte'
 
 	onMount(() => {
+		inputStore.start()
 		outputStore.prepareOutput()
 	})
 </script>

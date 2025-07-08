@@ -22,7 +22,7 @@
 		}
 
 		.toolbar {
-			@apply bg-gray-200;
+			@apply bg-silver-200;
 			@apply border border-black;
 			@apply rounded-sm;
 			@apply shadow-sm;

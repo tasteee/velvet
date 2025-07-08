@@ -93,7 +93,7 @@
 	:global(.selectTrigger) {
 		@apply text-sm monoFont border border-black rounded-sm shadow-sm;
 		@apply inline-flex items-center px-[10px] transition-colors;
-		@apply focus:outline-none touch-none select-none bg-gray-100;
+		@apply focus:outline-none touch-none select-none bg-silver-100;
 		width: var(--selectWidth);
 		color: #111;
 		font-weight: 500;
@@ -101,32 +101,63 @@
 	}
 
 	:global(.selectTriggerIcon) {
-		@apply size-5 text-gray-800 mr-[9px];
+		@apply size-5 text-silver-800;
 		flex-shrink: 0;
 	}
 	:global(.selectPlaceholder) {
-		@apply text-gray-400;
+		@apply text-silver-800;
 	}
 	:global(.selectTrigger .caretDownIcon) {
-		@apply size-6 text-gray-800 ml-auto;
+		@apply size-6 text-silver-800 ml-auto;
 		flex-shrink: 0;
 	}
 	:global(.selectContent) {
-		@apply border border-black rounded-sm shadow-sm bg-gray-100 monoFont transition-colors;
+		@apply border border-black rounded-sm shadow-sm bg-silver-100 monoFont transition-colors;
 		scroll-behavior: smooth;
 		overscroll-behavior: contain;
 		width: var(--selectWidth);
 		max-height: 300px;
 		z-index: 50;
 		padding: 0.25rem 0;
-		overflow: auto;
+		overflow: visible !important;
+		position: relative;
 	}
+
 	:global(.selectViewport) {
-		@apply p-1;
+		@apply py-[4px];
 	}
 
 	:global(.selectContentMoreButton) {
-		@apply size-4 flex w-full items-center justify-center py-2;
+		@apply flex items-center justify-center;
+		position: absolute;
+		left: 50%;
+		transform: translateX(-50%);
+		z-index: 2;
+		width: 1.75rem;
+		height: 1.75rem;
+		background: #111;
+		border-radius: 9999px;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+		transition: opacity 0.55s;
+		opacity: 1;
+		pointer-events: auto;
+		border: 2px solid #fff;
+		padding: 0;
+		z-index: 1000;
+	}
+
+	:global(.selectContent .selectContentMoreButton:first-of-type) {
+		top: -0.9rem;
+	}
+
+	:global(.selectContent .selectContentMoreButton:last-of-type) {
+		bottom: -0.9rem;
+	}
+
+	:global(.selectContentMoreIcon) {
+		@apply size-6;
+		color: #fff;
+		display: block;
 	}
 
 	:global(.selectContentMoreIcon) {
@@ -148,14 +179,14 @@
 	}
 
 	:global(.selectItem[data-highlighted]) {
-		@apply bg-gray-200;
+		@apply bg-silver-200;
 	}
 	:global(.selectedItem) {
 		color: #111;
 		font-weight: bold;
 	}
 	:global(.selectOptionIcon) {
-		@apply size-5 mr-2 text-gray-700;
+		@apply size-5 mr-2 text-silver-700;
 		flex-shrink: 0;
 	}
 	:global(.selectCheck) {

@@ -1,3 +1,14 @@
+@reference 'tailwindcss';
+@reference '../styles/tokens.css';
+
+@utility back-* {
+	background-color: color-mix(
+		in srgb,
+		--value(--color- *, [color]),
+		transparent --modifier(integer) %
+	);
+}
+
 @utility row {
 	display: flex;
 	flex-direction: row;
@@ -239,4 +250,3 @@
 @utility aBaseline {
 	align-items: baseline;
 }
-

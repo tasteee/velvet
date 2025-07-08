@@ -7,7 +7,7 @@
 		label?: string
 		tip?: string
 		isDisabled?: boolean
-		variant?: 'solid' | 'subtle' | 'ghost'
+		variant?: 'solid' | 'subtle' | 'ghost' | 'white'
 		onclick?: (event: MouseEvent) => void
 		id?: string
 		class?: string
@@ -22,9 +22,12 @@
 		const isSolid = props.variant === 'solid'
 		const isSubtle = props.variant === 'subtle'
 		const isGhost = props.variant === 'ghost'
+		const isWhite = props.variant === 'white'
+
 		if (isSolid) return 'solidKind'
 		if (isSubtle) return 'subtleKind'
 		if (isGhost) return 'ghostKind'
+		if (isWhite) return 'whiteKind'
 	})
 
 	const baseClass = $derived(`batsButton ${props.class || ''}`)
@@ -120,6 +123,20 @@
 
 		.batsButton.ghostKind:hover {
 			background: var(--color-silver-100);
+		}
+
+    .batsButton.whiteKind {
+      @apply text-sm border border-black rounded-sm shadow-sm;
+      @apply inline-flex items-center px-[10px] transition-colors;
+      @apply focus:outline-none touch-none select-none;
+      color: var(--black);
+      background: var(--color-silver-100);
+      font-weight: 500;
+      gap: 0.5rem;
+    }
+
+    .batsButton.whiteKind:hover {
+			background: var(--white);
 		}
 	}
 </style>

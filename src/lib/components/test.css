@@ -1,0 +1,21 @@
+/* 
+  Have a css color variable that you need to derive
+  a semi-transparent variant from?
+
+  Well, you COULD convert the hex / rgb / hsl / hsb / whatever
+  value to hexa / rgba / hsla / hsba / whatever and store
+  that as a new variable, like --pink600-a90.
+  
+  But no. Fuck that.
+
+  The color-mix() function can help you derive transparent color
+  variants without all the manual labor, to which I say... fuck yeah.
+*/
+
+:root {
+  --pink600: #ff57b8;
+}
+
+.card {
+  background: color-mix(in srgb, var(--pink600), transparent 90%);
+}

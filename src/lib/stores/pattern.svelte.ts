@@ -1,6 +1,7 @@
 import { TONE_ROWS } from '$lib/constants/toneRows'
 import { arrays } from '$lib/modules/arrays'
 import { createSignal } from '$lib/modules/creators'
+import { just } from '$lib/modules/just'
 import { outputStore } from './output.svelte'
 
 type PartialSignalT = Partial<SignalT> & { id: string }
@@ -37,7 +38,7 @@ const eraseSignal = (id: string): void => {
 	toggleToneSignalId(toneId, id)
 }
 
-const updateSignal = (overrides: PartialSignalT): SignalT | null => {
+const updateSignal = just.debounce(5, (overrides: PartialSignalT): SignalT | null => {
 	const signal = getSignal(overrides.id)
 	const toneId = overrides.toneId ?? signal.toneId
 	const didChangeTone = toneId !== signal.toneId
@@ -45,7 +46,7 @@ const updateSignal = (overrides: PartialSignalT): SignalT | null => {
 	if (didChangeTone) toggleToneSignalId(toneId, overrides.id)
 	Object.assign(signal, overrides)
 	return signal
-}
+})
 
 const clearSelectedSignalIds = (): void => {
 	patternStore.state.selectedSignalIds = []
@@ -121,6 +122,11 @@ class PatternStore {
 	setSelectedSignalIds = setSelectedSignalIds
 	addSelectedSignalIds = addSelectedSignalIds
 	removeSelectedSignalIds = removeSelectedSignalIds
+
+	getNthTone = (n: number): ToneT => {
+		const list = Object.values(patternStore.activeTones) as ToneT[]
+		return list[n]
+	}
 }
 
 export const patternStore = new PatternStore()
